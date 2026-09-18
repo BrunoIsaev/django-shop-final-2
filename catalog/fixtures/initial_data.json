@@ -1,0 +1,38 @@
+[
+  {
+    "model": "catalog.category",
+    "pk": 1,
+    "fields": {
+      "name": "Электроника",
+      "description": "Электронные устройства"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 2,
+    "fields": {
+      "name": "Одежда",
+      "description": "Одежда и аксессуары"
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 1,
+    "fields": {
+      "name": "Смартфон",
+      "description": "Современный смартфон",
+      "price": 45000,
+      "category": 1
+    }
+  },
+  {
+    "model": "catalog.product",
+    "pk": 2,
+    "fields": {
+      "name": "Футболка",
+      "description": "Хлопковая футболка",
+      "price": 1500,
+      "category": 2
+    }
+  }
+]
