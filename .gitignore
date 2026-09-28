@@ -10,3 +10,4 @@ db.sqlite3
 .pytest_cache/
 .env
 .env
+aeroplane_tracker/
