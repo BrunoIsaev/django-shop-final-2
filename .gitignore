@@ -11,3 +11,5 @@ db.sqlite3
 .env
 .env
 aeroplane_tracker/
+media/
+.env

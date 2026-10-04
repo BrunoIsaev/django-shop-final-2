@@ -1,32 +1,38 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import ListView, DetailView, CreateView, TemplateView
+from django.urls import reverse_lazy
 from .models import Product
 from .forms import ProductForm
 
 
-def home(request):
-    products = Product.objects.all()
-    return render(request, 'catalog/home.html', {'products': products})
+class HomeView(ListView):
+    """Главная страница со списком товаров."""
+    model = Product
+    template_name = 'catalog/home.html'
+    context_object_name = 'products'
 
 
-def contacts(request):
-    success = False
-    if request.method == "POST":
-        success = True
-    return render(request, "catalog/contacts.html", {"success": success})
+class ContactsView(TemplateView):
+    """Страница контактов."""
+    template_name = 'catalog/contacts.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['success'] = False
+        if self.request.method == 'POST':
+            context['success'] = True
+        return context
 
 
-def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    return render(request, 'catalog/product_detail.html', {'product': product})
+class ProductDetailView(DetailView):
+    """Детальная страница товара."""
+    model = Product
+    template_name = 'catalog/product_detail.html'
+    context_object_name = 'product'
 
 
-def add_product(request):
-    """View for adding a new product via form."""
-    if request.method == "POST":
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
-    else:
-        form = ProductForm()
-    return render(request, 'catalog/add_product.html', {'form': form})
+class ProductCreateView(CreateView):
+    """Создание нового товара."""
+    model = Product
+    form_class = ProductForm
+    template_name = 'catalog/add_product.html'
+    success_url = reverse_lazy('home')

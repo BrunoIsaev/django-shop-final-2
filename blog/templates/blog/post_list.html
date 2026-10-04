@@ -1,0 +1,34 @@
+{% extends 'catalog/base.html' %}
+
+{% block title %}Блог{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Блог</h1>
+    <a href="{% url 'blog:post_create' %}" class="btn btn-primary mb-4">Добавить запись</a>
+    
+    <div class="row">
+        {% for post in posts %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                {% if post.preview %}
+                    <img src="{{ post.preview.url }}" class="card-img-top" alt="{{ post.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ post.title }}</h5>
+                    <p class="card-text">{{ post.content|truncatechars:150 }}</p>
+                    <p class="text-muted">
+                        <small>📅 {{ post.created_at|date:"d.m.Y" }} | 👁 {{ post.views_count }} просмотров</small>
+                    </p>
+                    <a href="{% url 'blog:post_detail' post.pk %}" class="btn btn-primary">Читать</a>
+                    <a href="{% url 'blog:post_update' post.pk %}" class="btn btn-warning">Редактировать</a>
+                    <a href="{% url 'blog:post_delete' post.pk %}" class="btn btn-danger">Удалить</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center">Записи не найдены</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
