@@ -6,7 +6,7 @@
 <div class="container mt-5">
     <h1 class="text-center mb-4">Добро пожаловать!</h1>
     <p class="text-center">Интернет-магазин</p>
-    
+
     <div class="row">
         {% for product in products %}
         <div class="col-md-4 mb-4">
@@ -19,6 +19,8 @@
                     <p class="card-text">{{ product.description|truncatechars:100 }}</p>
                     <p class="h5 text-primary">{{ product.price }} руб.</p>
                     <a href="{% url 'product_detail' product.pk %}" class="btn btn-primary">Подробнее</a>
+                    <a href="{% url 'update_product' product.pk %}" class="btn btn-warning">Редактировать</a>
+                    <a href="{% url 'delete_product' product.pk %}" class="btn btn-danger">Удалить</a>
                 </div>
             </div>
         </div>
