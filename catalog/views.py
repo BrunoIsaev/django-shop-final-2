@@ -3,15 +3,18 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
-from .models import Product
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from .models import Product, Category
 from .forms import ProductForm
+from .services import get_products_by_category
 
 
 class HomeView(ListView):
     model = Product
     template_name = 'catalog/home.html'
     context_object_name = 'products'
-    
+
     def get_queryset(self):
         return Product.objects.filter(is_published=True)
 
@@ -27,7 +30,9 @@ class ContactsView(TemplateView):
         return context
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class ProductDetailView(LoginRequiredMixin, DetailView):
+    """Страница одного продукта. Кешируется на 5 минут."""
     model = Product
     template_name = 'catalog/product_detail.html'
     context_object_name = 'product'
@@ -40,27 +45,20 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     template_name = 'catalog/product_form.html'
     success_url = reverse_lazy('home')
     login_url = 'users:login'
-    
+
     def form_valid(self, form):
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
 
 class IsOwnerOrModeratorMixin(UserPassesTestMixin):
-    """Миксин для проверки: владелец или модератор."""
-    
     def test_func(self):
         product = self.get_object()
         user = self.request.user
-        
-        # Владелец может редактировать/удалять
         if product.owner == user:
             return True
-        
-        # Модератор может удалять
         if user.has_perm('catalog.delete_product'):
             return True
-        
         return False
 
 
@@ -69,7 +67,7 @@ class ProductUpdateView(LoginRequiredMixin, IsOwnerOrModeratorMixin, UpdateView)
     form_class = ProductForm
     template_name = 'catalog/product_form.html'
     login_url = 'users:login'
-    
+
     def get_success_url(self):
         return reverse_lazy('product_detail', kwargs={'pk': self.object.pk})
 
@@ -82,17 +80,30 @@ class ProductDeleteView(LoginRequiredMixin, IsOwnerOrModeratorMixin, DeleteView)
 
 
 class UnpublishProductView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    """Отмена публикации продукта (только для модераторов)."""
     model = Product
     template_name = 'catalog/product_confirm_unpublish.html'
     login_url = 'users:login'
-    
+
     def test_func(self):
         return self.request.user.has_perm('catalog.can_unpublish_product')
-    
+
     def form_valid(self, form):
         product = self.get_object()
         product.is_published = False
         product.save()
         messages.success(self.request, f'Публикация продукта "{product.name}" отменена.')
         return redirect('home')
+
+
+class CategoryProductsView(ListView):
+    """Список всех продуктов в указанной категории (данные из сервиса с кешем)."""
+    template_name = 'catalog/category_products.html'
+    context_object_name = 'products'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = get_object_or_404(Category, pk=self.kwargs['category_id'])
+        return context
+
+    def get_queryset(self):
+        return get_products_by_category(self.kwargs['category_id'], ttl=300)
